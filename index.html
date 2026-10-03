@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GeoTocaña · Capacidad portante · V02</title>
+<style>
+:root{
+  --bg:#f4f7f8; --panel:#ffffff; --ink:#18323a; --muted:#61757c;
+  --line:#d9e3e6; --accent:#0b6e75; --accent2:#c98724; --good:#26734d;
+  --warn:#a26400; --bad:#a83a3a; --soft:#eaf4f4; --soft2:#fff4df;
+  --shadow:0 10px 30px rgba(27,55,64,.08); --r:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+header{background:linear-gradient(135deg,#0c4f57,#0b6e75 60%,#15848b);color:white;padding:26px 24px 22px;box-shadow:var(--shadow)}
+.wrap{max-width:1240px;margin:auto}
+.header-grid{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}
+h1{margin:0;font-size:clamp(28px,4vw,48px);letter-spacing:-.03em}
+.subtitle{margin:8px 0 0;color:#d7f0f0;max-width:850px}
+.badge{display:inline-block;padding:7px 11px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:rgba(255,255,255,.1);font-size:13px}
+nav{position:sticky;top:0;z-index:5;background:rgba(244,247,248,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.tabs{max-width:1240px;margin:auto;display:flex;gap:8px;overflow:auto;padding:8px 14px 4px}
+.tab{border:0;background:transparent;padding:9px 13px;border-radius:11px;color:var(--muted);font-weight:700;cursor:pointer;white-space:nowrap;font-size:14px}
+.tab.active{background:var(--panel);color:var(--accent);box-shadow:0 3px 10px rgba(0,0,0,.06)}
+.tab:focus-visible,button.action:focus-visible,summary:focus-visible{outline:3px solid rgba(11,110,117,.45);outline-offset:2px}
+/* Panel resumen siempre visible */
+.sumbar{max-width:1240px;margin:auto;display:flex;gap:8px;overflow:auto;padding:4px 14px 9px}
+.sum{flex:0 0 auto;min-width:104px;padding:6px 10px;border-radius:10px;background:#fff;border:1px solid var(--line)}
+.sum .l{font-size:10.5px;color:var(--muted);font-weight:700;white-space:nowrap}
+.sum .v{font-size:15px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sum.good{border-color:#9fd0b5;background:#eef8f2}.sum.good .v{color:var(--good)}
+.sum.warn{border-color:#e6c27a;background:#fff8e8}.sum.warn .v{color:var(--warn)}
+.sum.bad{border-color:#e0a3a3;background:#fff0f0}.sum.bad .v{color:var(--bad)}
+main{max-width:1240px;margin:22px auto 60px;padding:0 16px}
+.section{display:none}.section.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);min-width:0}
+.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-7{grid-column:span 7}.span-6{grid-column:span 6}.span-5{grid-column:span 5}.span-4{grid-column:span 4}
+@media(max-width:900px){.span-8,.span-7,.span-6,.span-5,.span-4{grid-column:span 12}.header-grid{grid-template-columns:1fr}}
+.card h2,.card h3{margin-top:0}
+.card h2{font-size:22px}.card h3{font-size:17px;color:#294952}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px}
+.kpi{padding:15px;border-radius:14px;background:#f8fbfb;border:1px solid var(--line)}
+.kpi .v{font-size:23px;font-weight:800;color:var(--accent);margin-top:3px}
+.kpi .l{font-size:12px;letter-spacing:.02em;color:var(--muted);font-weight:700}
+.kpi.good{background:#eef8f2;border-color:#9fd0b5}.kpi.good .v{color:var(--good)}
+.kpi.warn{background:#fff8e8;border-color:#e6c27a}.kpi.warn .v{color:var(--warn)}
+.kpi.bad{background:#fff0f0;border-color:#e0a3a3}.kpi.bad .v{color:var(--bad)}
+.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:760px){.form-grid{grid-template-columns:1fr}}
+label{display:block;font-size:12px;font-weight:800;color:#405d65;margin-bottom:5px}
+.input-row{position:relative}
+input,select{width:100%;border:1px solid #cbdadd;border-radius:10px;padding:10px 46px 10px 11px;background:white;color:var(--ink);font-size:15px;outline:none}
+select{padding-right:11px}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(11,110,117,.12)}
+input.invalid{border-color:var(--bad);background:#fff7f7}
+.unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#7b8e94;font-size:12px;pointer-events:none}
+.small{font-size:12px;color:var(--muted)}
+.note{padding:12px 14px;border-radius:12px;border-left:4px solid var(--accent);background:var(--soft);color:#35545c}
+.note.warn{border-color:var(--warn);background:var(--soft2)}
+.note.bad{border-color:var(--bad);background:#fff0f0}
+#msgs .note{margin-bottom:10px}
+#msgs ul{margin:6px 0 0;padding-left:20px}
+.eq{font-family:Cambria Math,Times New Roman,serif;background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:11px 15px;margin:8px 0;font-size:17px;overflow:auto}
+.eq.sub{background:#fffdf6;border-color:#eadfbf;color:#4a3a12}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;letter-spacing:.03em;color:#526c73}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tscroll{overflow-x:auto}
+.tscroll table{min-width:620px}
+th.selc,td.selc{background:var(--soft)}
+.btns{display:flex;gap:9px;flex-wrap:wrap}
+button.action{border:0;border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--accent);color:white;font-size:14px}
+button.action.secondary{background:white;color:var(--accent);border:1px solid var(--accent)}
+button.action.gold{background:var(--accent2)}
+.status{font-weight:800;padding:10px 12px;border-radius:10px;display:inline-block}
+.status.good{color:var(--good);background:#e9f6ef}.status.warn{color:var(--warn);background:#fff4df}.status.bad{color:var(--bad);background:#ffeded}
+svg{max-width:100%;height:auto}
+details{border:1px solid var(--line);border-radius:12px;padding:10px 13px;background:#fbfcfc;margin-top:10px}
+summary{cursor:pointer;font-weight:800;color:#34545b}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:14px;border:1px solid #6b7f85;vertical-align:-3px;margin-right:5px;border-radius:2px}
+.legend b{font-weight:800}
+footer{max-width:1240px;margin:0 auto 30px;padding:0 16px;color:#70858b;font-size:12px}
+@media print{
+  nav,.no-print,.btns{display:none!important}
+  body{background:white}.card{box-shadow:none;break-inside:avoid}.section{display:block!important}
+  details{display:block}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap header-grid">
+    <div>
+      <span class="badge">Herramienta didáctica · Mecánica de Suelos / Geotecnia · V02</span>
+      <h1>GeoTocaña · Capacidad portante</h1>
+      <p class="subtitle">Capacidad portante por corte (Terzaghi, Meyerhof, Hansen y Vesic) frente a la demanda neta del tanque de agua de Tocaña, con una estimación empírica por SPT como contraste.</p>
+    </div>
+    <div class="small" style="color:#d7f0f0;text-align:right">Offline · HTML + CSS + JS<br>sin librerías externas</div>
+  </div>
+</header>
+
+<nav class="no-print">
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="datos">1. Datos y esquema</button>
+    <button class="tab" data-tab="corte">2. Corte directo</button>
+    <button class="tab" data-tab="teorias">3. Teorías</button>
+    <button class="tab" data-tab="spt">4. SPT</button>
+    <button class="tab" data-tab="tanque">5. Tanque y verificación</button>
+    <button class="tab" data-tab="comparacion">6. Comparación</button>
+    <button class="tab" data-tab="procedimiento">7. Procedimiento</button>
+    <button class="tab" data-tab="resultados">8. Resultados y exportación</button>
+  </div>
+  <div class="sumbar" id="sumbar" aria-live="polite"></div>
+</nav>
+
+<main>
+<div id="msgs" aria-live="polite"></div>
+
+<!-- ============ 1. DATOS ============ -->
+<section id="datos" class="section active">
+<div class="grid">
+  <div class="card span-12">
+    <h2>Parámetros del caso</h2>
+    <p class="small">Todos los datos son editables y el cálculo se actualiza al escribir. Los valores iniciales corresponden al caso de Tocaña. Convención de verificación: <b>presión neta</b> (q<sub>serv</sub> − γD<sub>f</sub>) contra q<sub>adm</sub> neta.</p>
+    <div class="btns no-print">
+      <button class="action" onclick="recalc()">Calcular</button>
+      <button class="action secondary" onclick="resetTocana()">Restablecer Tocaña</button>
+      <button class="action gold" onclick="exportTxt()">Exportar .txt</button>
+      <button class="action secondary" onclick="window.print()">Imprimir / PDF</button>
+    </div>
+  </div>
+
+  <div class="card span-6">
+    <h3>Geometría del tanque</h3>
+    <div class="form-grid" id="gridTank"></div>
+  </div>
+
+  <div class="card span-6">
+    <h3>Cimentación y suelo</h3>
+    <div class="form-grid" id="gridFound"></div>
+    <div style="margin-top:12px">
+      <label for="method">Teoría para la verificación</label>
+      <select id="method">
+        <option value="vesic" selected>Vesic (1973) · forma De Beer · profundidad Hansen (Das) — igual que V01</option>
+        <option value="hansen">Hansen (1970)</option>
+        <option value="meyerhof">Meyerhof (1963)</option>
+        <option value="terzaghi">Terzaghi (1943)</option>
+      </select>
+    </div>
+    <p style="margin:12px 0 0"><label style="display:flex;gap:8px;align-items:center;margin:0;font-weight:700"><input id="includeFoundation" type="checkbox" checked style="width:auto"> Incluir peso propio de la losa en la demanda (recomendado en la convención neta)</label></p>
+  </div>
+
+  <div class="card span-7">
+    <h3>Esquema acotado</h3>
+    <svg id="tankSvg" viewBox="0 0 800 500" role="img" aria-label="Esquema acotado del tanque y su cimentación"></svg>
+    <div class="legend">
+      <span><i style="background:#f0e3c9"></i>Suelo GC</span>
+      <span><i style="background:#d9e1e3"></i>Concreto (losa)</span>
+      <span><i style="background:#a8d9e4"></i>Agua</span>
+      <span><b style="color:#a83a3a">↓ rojo</b> presión de contacto (activa)</span>
+      <span><b style="color:#c98724">↓ naranja</b> resultante de carga W</span>
+    </div>
+    <p class="small" style="margin-bottom:0"><b>Esquema referencial.</b> Las alturas y anchos de tanque y losa están a escala dinámica; el espesor de los muros es solo gráfico. Se supone el tanque apoyado sobre la losa, con la base de la losa a D<sub>f</sub>.</p>
+  </div>
+
+  <div class="card span-5">
+    <h3>Datos geotécnicos de referencia</h3>
+    <table>
+      <tr><th>Propiedad</th><th>Valor</th></tr>
+      <tr><td>SUCS</td><td><b>GC</b> · grava arcillosa con arena</td></tr>
+      <tr><td>Gs</td><td>2.56</td></tr>
+      <tr><td>γ representativo</td><td>≈ 19.5 kN/m³</td></tr>
+      <tr><td>c′</td><td>≈ 0 kPa</td></tr>
+      <tr><td>φ′</td><td>29.93°</td></tr>
+      <tr><td>Nivel freático</td><td>No observado / no considerado</td></tr>
+      <tr><td>SPT</td><td><b>No realizado</b></td></tr>
+    </table>
+    <div class="note warn" style="margin-top:14px">La humedad natural previamente usada en algunas relaciones de fases mostró una inconsistencia física. Esta app no la utiliza para la capacidad portante.</div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 2. CORTE DIRECTO ============ -->
+<section id="corte" class="section">
+<div class="grid">
+  <div class="card span-12">
+    <h2>Método A · Parámetros de resistencia c′–φ′</h2>
+    <div class="note" id="methodNote"></div>
+  </div>
+
+  <div class="card span-7">
+    <h3>Ecuaciones de la teoría seleccionada</h3>
+    <div id="eqMethod"></div>
+  </div>
+
+  <div class="card span-5">
+    <h3>Factores calculados</h3>
+    <table>
+      <tr><th>Factor</th><th class="num">Resultado</th></tr>
+      <tr><td>N<sub>q</sub></td><td class="num" id="Nq">—</td></tr>
+      <tr><td>N<sub>c</sub></td><td class="num" id="Nc">—</td></tr>
+      <tr><td>N<sub>γ</sub></td><td class="num" id="Ng">—</td></tr>
+      <tr><td>F<sub>cs</sub></td><td class="num" id="Fcs">—</td></tr>
+      <tr><td>F<sub>qs</sub></td><td class="num" id="Fqs">—</td></tr>
+      <tr><td>F<sub>γs</sub></td><td class="num" id="Fgs">—</td></tr>
+      <tr><td>F<sub>cd</sub></td><td class="num" id="Fcd">—</td></tr>
+      <tr><td>F<sub>qd</sub></td><td class="num" id="Fqd">—</td></tr>
+      <tr><td>F<sub>γd</sub></td><td class="num" id="Fgd">—</td></tr>
+    </table>
+  </div>
+
+  <div class="card span-12">
+    <h3>Resultado de capacidad portante</h3>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Sobrecarga q = γD<sub>f</sub></div><div class="v" id="qover">—</div></div>
+      <div class="kpi"><div class="l">qᵤ bruta</div><div class="v" id="qu">—</div></div>
+      <div class="kpi"><div class="l">qᵤ neta = qᵤ − q</div><div class="v" id="qnetu">—</div></div>
+      <div class="kpi"><div class="l">q<sub>adm</sub> neta = qᵤ,neta/FS</div><div class="v" id="qadmNet">—</div></div>
+      <div class="kpi"><div class="l">q<sub>adm</sub> bruta = qᵤ/FS (referencia)</div><div class="v" id="qadmGross">—</div></div>
+      <div class="kpi"><div class="l">q + q<sub>adm</sub> neta (referencia)</div><div class="v" id="qadmNetGross">—</div></div>
+    </div>
+    <div id="componentsChart" style="margin-top:14px"></div>
+    <p class="small">La verificación usa la <b>q<sub>adm</sub> neta</b>. Las dos capacidades brutas se conservan como referencia para comparar con V01; no se usan en el chequeo.</p>
+  </div>
+</div>
+</section>
+
+<!-- ============ 3. TEORIAS ============ -->
+<section id="teorias" class="section">
+<div class="grid">
+  <div class="card span-12">
+    <h2>Comparación de teorías de capacidad portante</h2>
+    <p>Las cuatro teorías se calculan con los mismos datos (carga vertical centrada, base y terreno horizontales, sin nivel freático). La columna sombreada es la seleccionada en «Datos».</p>
+    <div class="tscroll" id="theoryTable"></div>
+  </div>
+  <div class="card span-7">
+    <h3>Lectura técnica</h3>
+    <div id="theoryReading"></div>
+  </div>
+  <div class="card span-5">
+    <h3>Alcances y límites</h3>
+    <div class="note warn">Las diferencias entre autores vienen de Nγ y de los factores de forma y profundidad. Para el informe conviene justificar una teoría y reportar el rango de las demás. Terzaghi se limita a D<sub>f</sub> ≤ B y no incluye factores de profundidad. En Terzaghi, N<sub>γ</sub> usa una aproximación analítica de K<sub>pγ</sub> (difiere unos pocos % de la tabla original).</div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 4. SPT ============ -->
+<section id="spt" class="section">
+<div class="grid">
+  <div class="card span-12">
+    <h2>Método B · Estimación empírica mediante SPT</h2>
+    <div class="note warn"><b>En Tocaña no se realizó SPT.</b> Este módulo queda como comparación paramétrica. La correlación seleccionada fue planteada para suelos granulares; en un GC con alta proporción de finos debe interpretarse como contraste empírico, no como sustitución del ensayo de corte. La fuente de la correlación debe citarse en el informe.</div>
+  </div>
+
+  <div class="card span-6">
+    <h3>Correcciones del número de golpes</h3>
+    <div class="form-grid" id="gridSpt1"></div>
+    <div class="eq">N<sub>60</sub> = C<sub>E</sub>C<sub>B</sub>C<sub>R</sub>C<sub>S</sub>N</div>
+    <div class="eq">(N<sub>1</sub>)<sub>60</sub> = C<sub>N</sub>N<sub>60</sub></div>
+  </div>
+
+  <div class="card span-6">
+    <h3>Correlación comparativa</h3>
+    <div class="eq">q<sub>u,SPT</sub> = 32 (N<sub>1</sub>)<sub>60</sub> B [ C<sub>w1</sub> + C<sub>w2</sub>(D<sub>f</sub>/B) ]</div>
+    <div class="form-grid" id="gridSpt2"></div>
+    <p class="small">Como no se considera nivel freático en Tocaña, los factores de agua se dejan en 1. Si se modifica el escenario hidrogeológico, deben ajustarse conscientemente. El resultado se muestra tal como lo entrega la correlación (no se convierte a convención neta).</p>
+  </div>
+
+  <div class="card span-12">
+    <div class="kpis">
+      <div class="kpi"><div class="l">N60</div><div class="v" id="N60">—</div></div>
+      <div class="kpi"><div class="l">(N1)60</div><div class="v" id="N160">—</div></div>
+      <div class="kpi"><div class="l">qᵤ por SPT</div><div class="v" id="quSpt">—</div></div>
+      <div class="kpi"><div class="l">q<sub>adm</sub> por SPT</div><div class="v" id="qadmSpt">—</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 5. TANQUE ============ -->
+<section id="tanque" class="section">
+<div class="grid">
+  <div class="card span-6">
+    <h2>Demanda transmitida por el tanque</h2>
+    <div class="eq">V<sub>w</sub> = B<sub>t</sub>L<sub>t</sub>h</div>
+    <div class="eq">W<sub>w</sub> = γ<sub>w</sub>V<sub>w</sub></div>
+    <div class="eq">q<sub>serv</sub> = (W<sub>w</sub> + W<sub>estructura</sub> + W<sub>losa</sub>)/(BL)</div>
+    <div class="eq">q<sub>serv,neta</sub> = q<sub>serv</sub> − γD<sub>f</sub></div>
+    <div class="note">El peso de la estructura del tanque queda como entrada independiente para no inventar espesores de muros, cubierta o accesorios. Con la convención neta, la presión de referencia descuenta el peso del suelo excavado γD<sub>f</sub>.</div>
+  </div>
+  <div class="card span-6">
+    <div class="kpis">
+      <div class="kpi"><div class="l">Volumen de agua</div><div class="v" id="Vwater">—</div></div>
+      <div class="kpi"><div class="l">Peso del agua</div><div class="v" id="Wwater">—</div></div>
+      <div class="kpi"><div class="l">Peso de la losa</div><div class="v" id="Wfoundation">—</div></div>
+      <div class="kpi"><div class="l">Peso total W</div><div class="v" id="Wtotal">—</div></div>
+      <div class="kpi"><div class="l">q<sub>serv</sub> (total)</div><div class="v" id="qserv">—</div></div>
+      <div class="kpi"><div class="l">q<sub>serv,neta</sub></div><div class="v" id="qservNet">—</div></div>
+    </div>
+  </div>
+  <div class="card span-12">
+    <h3>Verificación con el método c′–φ′ (convención neta)</h3>
+    <div id="fsCards" class="kpis" style="margin-bottom:14px"></div>
+    <div id="checkShear" class="status">—</div>
+    <div id="utilBar" style="margin-top:16px"></div>
+    <p class="small">Criterio de color: <b style="color:var(--good)">verde</b> si FS real ≥ FS requerido; <b style="color:var(--warn)">amarillo</b> si 1 ≤ FS real &lt; FS requerido; <b style="color:var(--bad)">rojo</b> si FS real &lt; 1.</p>
+  </div>
+</div>
+</section>
+
+<!-- ============ 6. COMPARACION ============ -->
+<section id="comparacion" class="section">
+<div class="grid">
+  <div class="card span-12">
+    <h2>Comparación de métodos</h2>
+    <p class="small">Barras: q<sub>adm</sub> neta por teoría (c′–φ′) y, si hay dato, q<sub>adm</sub> por SPT tal como entrega su correlación. Línea naranja: q<sub>serv,neta</sub>.</p>
+    <div id="compareChart"></div>
+  </div>
+  <div class="card span-7">
+    <h3>Lectura técnica</h3>
+    <table>
+      <tr><th>Criterio</th><th>c′–φ′</th><th>SPT</th></tr>
+      <tr><td>Origen</td><td>Parámetros de resistencia medidos</td><td>Correlación empírica de campo</td></tr>
+      <tr><td>Dato clave</td><td>c′, φ′, γ</td><td>N corregido</td></tr>
+      <tr><td>Tocaña</td><td>Disponible</td><td>No realizado</td></tr>
+      <tr><td>Aplicabilidad</td><td>Directa al modelo de resistencia</td><td>Comparativa; cautela por suelo GC con finos</td></tr>
+      <tr><td>Resultado (q<sub>adm</sub>)</td><td id="cmpShear">—</td><td id="cmpSpt">Sin dato</td></tr>
+    </table>
+  </div>
+  <div class="card span-5">
+    <h3>Control de servicio</h3>
+    <p>La capacidad portante por corte es solo una parte del diseño. El valor admisible final también debe respetar los estados límite de servicio, especialmente asentamientos.</p>
+    <div class="note warn">Esta app compara capacidad por corte y demanda estática vertical. No reemplaza el análisis de asentamientos, estabilidad global, sismo, excentricidad, interacción con taludes ni el diseño estructural de la losa.</div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 7. PROCEDIMIENTO ============ -->
+<section id="procedimiento" class="section">
+<div class="grid">
+  <div class="card span-12">
+    <h2>Procedimiento didáctico paso a paso</h2>
+    <p class="small">Cada paso muestra la fórmula simbólica, la sustitución numérica y el resultado, para la teoría seleccionada.</p>
+    <div class="btns no-print" style="margin-bottom:6px">
+      <button class="action secondary" onclick="toggleSteps(true)">Expandir todo</button>
+      <button class="action secondary" onclick="toggleSteps(false)">Contraer todo</button>
+    </div>
+    <div id="steps"></div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 8. RESULTADOS ============ -->
+<section id="resultados" class="section">
+<div class="grid">
+  <div class="card span-12">
+    <h2>Resultados y exportación</h2>
+    <div class="btns no-print"><button class="action gold" onclick="exportTxt()">Descargar resultados (.txt)</button><button class="action secondary" onclick="window.print()">Imprimir / PDF</button></div>
+  </div>
+  <div class="card span-7">
+    <h3>Tabla resumen</h3>
+    <div id="resTable"></div>
+  </div>
+  <div class="card span-5">
+    <h3>Resultado de la verificación</h3>
+    <div id="resStatus"></div>
+    <p class="small" style="margin-top:14px">Teoría usada: <b id="resTheory">—</b></p>
+  </div>
+</div>
+</section>
+</main>
+
+<footer>
+  <b>GeoTocaña V02</b> · Herramienta académica autocontenida. Parámetros iniciales: suelo GC, γ≈19.5 kN/m³, c′≈0 kPa, φ′=29.93°, D<sub>f</sub>=1.0 m, sin nivel freático. El SPT no fue realizado.
+</footer>
+
+<script>
+'use strict';
+/* ====================== utilidades ====================== */
+const $ = id => document.getElementById(id);
+const fmt = (x,d=2) => Number.isFinite(x) ? x.toLocaleString('es-BO',{minimumFractionDigits:d,maximumFractionDigits:d}) : '—';
+const kpa = x => Number.isFinite(x) ? fmt(x,1)+' kPa' : '—';
+const fsTxt = x => x===Infinity ? '∞' : fmt(x,2);
+const RAD = Math.PI/180;
+
+const CORE = ['Bt','Lt','Ht','hw','gw','Wstruct','B','L','Df','gamma','cohesion','phi','FS','tf','gc'];
+const SPTF = ['CE','CB','CR','CS','CN','Cw1','Cw2','FSspt'];
+const LBL = {Bt:'Ancho del tanque Bₜ',Lt:'Largo del tanque Lₜ',Ht:'Altura total Hₜ',hw:'Altura de agua h',gw:'Peso unitario del agua γw',Wstruct:'Peso adicional estructura',
+  B:'Ancho de cimentación B',L:'Largo de cimentación L',Df:'Profundidad Df',gamma:'γ natural',cohesion:'c′',phi:'φ′',FS:'Factor de seguridad',tf:'Espesor de losa',gc:'γ concreto',
+  CE:'CE · energía',CB:'CB · perforación',CR:'CR · longitud de barras',CS:'CS · muestreador',CN:'CN · sobrecarga',Cw1:'Cw1',Cw2:'Cw2',FSspt:'FS SPT',Nspt:'N medido'};
+const DEFAULTS = {Bt:4,Lt:4,Ht:3,hw:3,gw:9.81,Wstruct:0,B:4,L:4,Df:1,gamma:19.5,cohesion:0,phi:29.93,FS:3,tf:.30,gc:24,CE:1,CB:1,CR:1,CS:1,CN:1,Cw1:1,Cw2:1,FSspt:3};
+const METHODS = {
+  vesic:   {name:'Vesic (1973)',    desc:'Nγ de Vesic · forma De Beer · profundidad Hansen (Das)'},
+  hansen:  {name:'Hansen (1970)',   desc:'Nγ de Hansen · forma y profundidad de Hansen'},
+  meyerhof:{name:'Meyerhof (1963)', desc:'Nγ = (Nq−1)tan(1.4φ) · forma y profundidad de Meyerhof'},
+  terzaghi:{name:'Terzaghi (1943)', desc:'Zapata rectangular por interpolación entre faja y cuadrada; sin factores de profundidad'}
+};
+let LAST = null;
+
+/* ====================== formularios ====================== */
+const F_TANK = [['Bt','m',.01],['Lt','m',.01],['Ht','m',.01],['hw','m',.01],['gw','kN/m³',.01],['Wstruct','kN',1]];
+const F_FOUND = [['B','m',.01],['L','m',.01],['Df','m',.01],['gamma','kN/m³',.01],['cohesion','kPa',.1],['phi','°',.01],['FS','—',.1],['tf','m',.01],['gc','kN/m³',.1]];
+const fld = (id,unit,step,ph='') => `<div><label for="${id}">${LBL[id]}</label><div class="input-row"><input id="${id}" type="number" step="${step}" inputmode="decimal" ${ph?`placeholder="${ph}"`:''} value="${ph?'':DEFAULTS[id]}"><span class="unit">${unit}</span></div></div>`;
+function initForms(){
+  $('gridTank').innerHTML = F_TANK.map(f=>fld(...f)).join('');
+  $('gridFound').innerHTML = F_FOUND.map(f=>fld(...f)).join('');
+  $('gridSpt1').innerHTML = fld('Nspt','golpes',1,'No realizado') + ['CE','CB','CR','CS','CN'].map(i=>fld(i,'—',.01)).join('');
+  $('gridSpt2').innerHTML = ['Cw1','Cw2','FSspt'].map(i=>fld(i,'—',i==='FSspt'?.1:.01)).join('');
+}
+
+/* ====================== lectura y validación ====================== */
+function readParams(){
+  const p = {};
+  [...CORE,...SPTF].forEach(k=>{ const v=$(k).value.trim(); p[k] = v==='' ? NaN : parseFloat(v); });
+  const raw = $('Nspt').value.trim();
+  p.N = raw==='' ? null : parseFloat(raw);
+  p.method = $('method').value;
+  p.incF = $('includeFoundation').checked;
+  return p;
+}
+
+function validate(p){
+  const e=[], w=[], bad=new Set();
+  const err=(k,m)=>{e.push(m); bad.add(k);};
+  CORE.forEach(k=>{ if(!Number.isFinite(p[k])) err(k,`Falta un valor numérico en «${LBL[k]}».`); });
+  if(CORE.every(k=>Number.isFinite(p[k]))){
+    ['Bt','Lt','B','L','Ht','gw','gamma','gc'].forEach(k=>{ if(p[k]<=0) err(k,`«${LBL[k]}» debe ser mayor que 0.`); });
+    ['hw','Df','cohesion','tf','Wstruct'].forEach(k=>{ if(p[k]<0) err(k,`«${LBL[k]}» no puede ser negativo.`); });
+    if(p.phi<0 || p.phi>50) err('phi',`«φ′» = ${fmt(p.phi,2)}° está fuera del rango práctico 0°–50°.`);
+    if(p.FS<1) err('FS','El factor de seguridad debe ser ≥ 1.');
+    if(!e.length){
+      const Bm=Math.min(p.B,p.L);
+      if(p.hw>p.Ht) { w.push(`h = ${fmt(p.hw,2)} m supera Hₜ = ${fmt(p.Ht,2)} m: se usa h = Hₜ en los cálculos.`); bad.add('hw'); }
+      if(p.L<p.B) w.push('L < B: la teoría exige B ≤ L. Se usa B = min(B, L) y L = max(B, L) en la capacidad portante.');
+      if(p.B<p.Bt || p.L<p.Lt) { w.push('La cimentación es menor que la planta del tanque (B < Bₜ o L < Lₜ). Verifique que sea lo deseado.'); }
+      if(p.phi>45) w.push(`φ′ = ${fmt(p.phi,2)}° es muy alto para un suelo GC; revise el dato.`);
+      if(p.gamma<14 || p.gamma>24) w.push(`γ = ${fmt(p.gamma,2)} kN/m³ está fuera del rango usual (14–24 kN/m³).`);
+      if(p.FS<2) w.push('FS < 2 es inusual para capacidad portante por corte (lo habitual es FS ≥ 3).');
+      if(p.Df/Bm>3) w.push('Df/B > 3: las teorías superficiales pierden validez (cimentación profunda).');
+      if(p.method==='terzaghi' && p.Df/Bm>1) w.push('Terzaghi aplica a cimentaciones superficiales con Df ≤ B.');
+      if(p.tf>p.Df) w.push('El espesor de la losa supera Df; el esquema limita la losa a Df.');
+      if(p.cohesion>0 && p.phi===0) w.push('φ′ = 0° con c′ > 0: se aplica el caso φ = 0 (Nc = 5.14, o 5.70 en Terzaghi).');
+    }
+  }
+  if(p.N!==null){
+    if(!Number.isFinite(p.N) || p.N<0) err('Nspt','«N medido» debe ser un número ≥ 0.');
+    SPTF.forEach(k=>{ if(!Number.isFinite(p[k]) || p[k]<=0) err(k,`«${LBL[k]}» debe ser un número mayor que 0 para usar el SPT.`); });
+    if(Number.isFinite(p.FSspt) && p.FSspt<1) err('FSspt','«FS SPT» debe ser ≥ 1.');
+  }
+  return {errors:e, warns:w, bad};
+}
+
+/* ====================== cálculo (puro, sin DOM) ====================== */
+/* Capacidad portante por corte; carga vertical centrada, base horizontal, sin N.F. */
+function capacity(p,key){
+  const Bm=Math.min(p.B,p.L), Lm=Math.max(p.B,p.L), r=Bm/Lm;
+  const ph=p.phi*RAD, t=Math.tan(ph), sn=Math.sin(ph), flat=p.phi<0.001;
+  const g=p.gamma, c=p.cohesion, Df=p.Df, q=g*Df, FS=p.FS;
+  const Kp=Math.pow(Math.tan(Math.PI/4+ph/2),2);
+  const kD=Df/Bm;                                  // Df/B
+  const k = kD<=1 ? kD : Math.atan(kD);            // Hansen/Vesic: k = Df/B si ≤1; atan(Df/B) si >1
+  const NqP = flat ? 1 : Math.exp(Math.PI*t)*Kp;   // Prandtl–Reissner
+  const NcP = flat ? 5.14 : (NqP-1)/t;
+  let Nq,Nc,Ng,sc,sq,sg,dc,dq,dg=1,extra={};
+  if(key==='terzaghi'){
+    const a = Math.exp((0.75*Math.PI-ph/2)*t);
+    Nq = a*a/(2*Math.pow(Math.cos(Math.PI/4+ph/2),2));
+    Nc = flat ? 5.70 : (Nq-1)/t;
+    const Kpg = 3*Math.pow(Math.tan((45+(p.phi+33)/2)*RAD),2);     // aproximación analítica de Kpγ
+    Ng = 0.5*t*(Kpg/Math.pow(Math.cos(ph),2)-1);
+    sc=1+0.3*r; sq=1; sg=1-0.2*r; dc=dq=dg=1; extra={a,Kpg};
+  }else if(key==='meyerhof'){
+    Nq=NqP; Nc=NcP; Ng = flat ? 0 : (Nq-1)*Math.tan(1.4*ph);
+    sc=1+0.2*Kp*r; sq=sg=(p.phi>10)?1+0.1*Kp*r:1;
+    dc=1+0.2*Math.sqrt(Kp)*kD; dq=dg=(p.phi>10)?1+0.1*Math.sqrt(Kp)*kD:1;
+    extra={Kp};
+  }else{ // hansen | vesic
+    Nq=NqP; Nc=NcP;
+    Ng = key==='hansen' ? 1.5*(Nq-1)*t : 2*(Nq+1)*t;
+    sc = flat ? 1+0.2*r : 1+r*(Nq/Nc);
+    sq = key==='hansen' ? 1+r*sn : 1+r*t;
+    sg = 1-0.4*r;
+    dq = 1+2*t*Math.pow(1-sn,2)*k;
+    dc = flat ? 1+0.4*k : dq-(1-dq)/(Nc*t);
+    extra={k};
+  }
+  const tC=c*Nc*sc*dc, tQ=q*Nq*sq*dq, tG=0.5*g*Bm*Ng*sg*dg;
+  const qu=tC+tQ+tG, quNet=qu-q;
+  return {key,name:METHODS[key].name,Bm,Lm,r,kD,q,Nq,Nc,Ng,sc,sq,sg,dc,dq,dg,tC,tQ,tG,qu,quNet,
+          qadmGross:qu/FS, qadmNet:quNet/FS, qadmNetGross:q+quNet/FS, ...extra};
+}
+
+function tankCalc(p){
+  const hw=Math.min(p.hw,p.Ht), A=p.B*p.L;
+  const Vw=p.Bt*p.Lt*hw, Ww=Vw*p.gw;
+  const Wf=p.incF ? A*p.tf*p.gc : 0;
+  const Wtot=Ww+p.Wstruct+Wf, qs=Wtot/A, q=p.gamma*p.Df;
+  return {hw,A,Vw,Ww,Wstruct:p.Wstruct,Wf,Wtot,qs,q,qn:qs-q};
+}
+
+function verify(p,m,t){
+  const qn=t.qn, FSreq=p.FS;
+  let FSreal, status;
+  if(qn<=0){ FSreal=Infinity; status='good'; }
+  else if(m.quNet<=0){ FSreal=0; status='bad'; }
+  else { FSreal=m.quNet/qn; status = FSreal>=FSreq ? 'good' : (FSreal>=1 ? 'warn' : 'bad'); }
+  return {qn,FSreal,FSreq,eta:qn/m.qadmNet,status,compensada:qn<=0};
+}
+
+function sptCalc(p){
+  if(p.N===null) return {ok:false};
+  const N60=p.N*p.CE*p.CB*p.CR*p.CS, N160=N60*p.CN, Bm=Math.min(p.B,p.L);
+  const qu=32*N160*Bm*(p.Cw1+p.Cw2*(p.Df/Bm));       // correlación comparativa (fuente por citar)
+  return {ok:true,N:p.N,N60,N160,qu,qadm:qu/p.FSspt,FS:p.FSspt};
+}
+
+function calc(p){
+  const th={}; Object.keys(METHODS).forEach(k=>th[k]=capacity(p,k));
+  const sel=th[p.method], tank=tankCalc(p), spt=sptCalc(p);
+  return {th,sel,tank,spt,chk:verify(p,sel,tank)};
+}
+
+/* ====================== bucle principal ====================== */
+const KPI_IDS=['Nq','Nc','Ng','Fcs','Fqs','Fgs','Fcd','Fqd','Fgd','qover','qu','qnetu','qadmNet','qadmGross','qadmNetGross','N60','N160','quSpt','qadmSpt',
+  'Vwater','Wwater','Wfoundation','Wtotal','qserv','qservNet','cmpShear','cmpSpt','resTheory'];
+
+function recalc(){
+  const p=readParams(), v=validate(p);
+  document.querySelectorAll('input.invalid').forEach(x=>x.classList.remove('invalid'));
+  v.bad.forEach(k=>{ const el=$(k); if(el) el.classList.add('invalid'); });
+  renderMsgs(v);
+  if(v.errors.length){ LAST=null; renderBlocked(); return; }
+  const c=calc(p);
+  LAST={p,c,v};
+  render(p,c);
+}
+
+function renderMsgs(v){
+  let h='';
+  if(v.errors.length) h+=`<div class="note bad"><b>Corrija estos datos para calcular:</b><ul>${v.errors.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+  if(v.warns.length) h+=`<div class="note warn"><b>Advertencias:</b><ul>${v.warns.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+  $('msgs').innerHTML=h;
+}
+
+function renderBlocked(){
+  KPI_IDS.forEach(id=>{ const el=$(id); if(el) el.textContent='—'; });
+  const ph='<p class="small">Corrija los datos marcados para ver resultados.</p>';
+  ['theoryTable','theoryReading','compareChart','steps','componentsChart','utilBar','fsCards','resTable','resStatus','eqMethod'].forEach(id=>$(id).innerHTML=ph);
+  $('checkShear').className='status'; $('checkShear').textContent='—';
+  $('sumbar').innerHTML='<div class="sum bad"><div class="l">Estado</div><div class="v">Datos incompletos</div></div>';
+  $('tankSvg').innerHTML='<text x="400" y="250" text-anchor="middle" font-size="18" fill="#a83a3a">Corrija los datos para ver el esquema</text>';
+}
+
+function render(p,c){
+  const m=c.sel, t=c.tank, k=c.chk, s=c.spt;
+  // Corte directo
+  $('methodNote').innerHTML=`<b>${m.name}</b> · ${METHODS[m.key].desc}. Carga vertical centrada, base y terreno horizontales, sin nivel freático.`;
+  $('eqMethod').innerHTML=eqMethodHtml(m);
+  [['Nq','Nq'],['Nc','Nc'],['Ng','Ng'],['Fcs','sc'],['Fqs','sq'],['Fgs','sg'],['Fcd','dc'],['Fqd','dq'],['Fgd','dg']].forEach(([id,key])=>$(id).textContent=fmt(m[key],3));
+  $('qover').textContent=kpa(m.q); $('qu').textContent=kpa(m.qu); $('qnetu').textContent=kpa(m.quNet);
+  $('qadmNet').textContent=kpa(m.qadmNet); $('qadmGross').textContent=kpa(m.qadmGross); $('qadmNetGross').textContent=kpa(m.qadmNetGross);
+  $('componentsChart').innerHTML=components(m);
+  // Teorías
+  $('theoryTable').innerHTML=theoryTable(p,c);
+  $('theoryReading').innerHTML=theoryReading(c);
+  // SPT
+  $('N60').textContent=s.ok?fmt(s.N60,2):'Sin dato'; $('N160').textContent=s.ok?fmt(s.N160,2):'Sin dato';
+  $('quSpt').textContent=s.ok?kpa(s.qu):'Sin dato'; $('qadmSpt').textContent=s.ok?kpa(s.qadm):'Sin dato';
+  // Tanque
+  $('Vwater').textContent=fmt(t.Vw,2)+' m³'; $('Wwater').textContent=fmt(t.Ww,1)+' kN'; $('Wfoundation').textContent=fmt(t.Wf,1)+' kN';
+  $('Wtotal').textContent=fmt(t.Wtot,1)+' kN'; $('qserv').textContent=kpa(t.qs); $('qservNet').textContent=kpa(t.qn);
+  renderCheck(p,c);
+  // Comparación
+  $('compareChart').innerHTML=compareChart(p,c);
+  $('cmpShear').textContent=kpa(m.qadmNet)+' (neta)';
+  $('cmpSpt').textContent=s.ok?kpa(s.qadm):'Sin dato (SPT no realizado)';
+  // Procedimiento, resultados, resumen, esquema
+  const open=[...document.querySelectorAll('#steps details')].map(d=>d.open);
+  $('steps').innerHTML=stepsHtml(p,c);
+  if(open.length) document.querySelectorAll('#steps details').forEach((d,i)=>{ if(open[i]!==undefined) d.open=open[i]; });
+  renderResults(p,c);
+  renderSummary(p,c);
+  svgScheme(p,c);
+}
+
+function renderCheck(p,c){
+  const m=c.sel, t=c.tank, k=c.chk;
+  const st=k.status, lab={good:'Cumple',warn:'No alcanza el FS',bad:'Falla por corte'}[st];
+  $('fsCards').innerHTML=`
+    <div class="kpi ${st}"><div class="l">FS real = qᵤ,neta / q<sub>serv,neta</sub></div><div class="v">${fsTxt(k.FSreal)}</div></div>
+    <div class="kpi"><div class="l">FS requerido</div><div class="v">${fmt(k.FSreq,2)}</div></div>
+    <div class="kpi ${st}"><div class="l">Utilización q<sub>serv,neta</sub> / q<sub>adm</sub> neta</div><div class="v">${k.compensada?'0.0 %':fmt(k.eta*100,1)+' %'}</div></div>
+    <div class="kpi ${st}"><div class="l">Estado</div><div class="v" style="font-size:19px">${lab}</div></div>`;
+  const el=$('checkShear'); el.className='status '+st;
+  if(k.compensada) el.textContent=`CUMPLE: q_serv,neta = ${fmt(k.qn,1)} kPa ≤ 0 (la excavación compensa la carga)`;
+  else if(st==='good') el.textContent=`CUMPLE (neta): q_serv,neta = ${fmt(k.qn,1)} kPa ≤ q_adm,neta = ${fmt(m.qadmNet,1)} kPa · FS real = ${fmt(k.FSreal,2)} ≥ ${fmt(k.FSreq,2)}`;
+  else if(st==='warn') el.textContent=`NO CUMPLE el FS requerido: q_serv,neta = ${fmt(k.qn,1)} kPa > q_adm,neta = ${fmt(m.qadmNet,1)} kPa · FS real = ${fmt(k.FSreal,2)} < ${fmt(k.FSreq,2)}`;
+  else el.textContent=`FALLA POR CORTE: q_serv,neta = ${fmt(k.qn,1)} kPa > qᵤ,neta = ${fmt(m.quNet,1)} kPa`;
+  $('utilBar').innerHTML=utilization(k);
+  $('resStatus').innerHTML=`<div class="status ${st}">${el.textContent}</div>`;
+}
+
+function utilization(k){
+  const col={good:'#26734d',warn:'#c98724',bad:'#a83a3a'}[k.status];
+  const pct=k.compensada?0:Math.min(k.eta*100,100);
+  return `<div style="height:24px;border-radius:999px;background:#e6edef;overflow:hidden;position:relative">
+    <div style="width:${pct}%;height:100%;background:${col}"></div>
+    <div style="position:absolute;left:${100/Math.max(1,k.FSreq)}%;top:0;bottom:0;width:2px;background:#18323a" title="Límite para FS requerido"></div></div>
+    <p class="small"><b>Utilización:</b> ${k.compensada?'0.0':fmt(k.eta*100,1)} % de q<sub>adm</sub> neta. La marca vertical indica el límite del FS requerido respecto de qᵤ,neta (${fmt(100/Math.max(1,k.FSreq),1)} %).</p>`;
+}
+
+/* ====================== tablas y textos ====================== */
+function theoryTable(p,c){
+  const keys=Object.keys(METHODS), qn=c.tank.qn;
+  const rows=[['N<sub>c</sub>','Nc',3],['N<sub>q</sub>','Nq',3],['N<sub>γ</sub>','Ng',3],
+    ['F<sub>cs</sub>','sc',3],['F<sub>qs</sub>','sq',3],['F<sub>γs</sub>','sg',3],
+    ['F<sub>cd</sub>','dc',3],['F<sub>qd</sub>','dq',3],['F<sub>γd</sub>','dg',3],
+    ['c′N<sub>c</sub>F<sub>cs</sub>F<sub>cd</sub> (kPa)','tC',1],['qN<sub>q</sub>F<sub>qs</sub>F<sub>qd</sub> (kPa)','tQ',1],['½γBN<sub>γ</sub>F<sub>γs</sub>F<sub>γd</sub> (kPa)','tG',1],
+    ['<b>qᵤ bruta (kPa)</b>','qu',1],['qᵤ neta = qᵤ − q (kPa)','quNet',1],['<b>q<sub>adm</sub> neta (kPa)</b>','qadmNet',1],['q<sub>adm</sub> bruta = qᵤ/FS (kPa, ref.)','qadmGross',1]];
+  let h='<table><tr><th>Concepto</th>'+keys.map(k=>`<th class="num ${k===p.method?'selc':''}">${METHODS[k].name}</th>`).join('')+'</tr>';
+  rows.forEach(([lab,key,d])=>{ h+=`<tr><td>${lab}</td>`+keys.map(k=>`<td class="num ${k===p.method?'selc':''}">${fmt(c.th[k][key],d)}</td>`).join('')+'</tr>'; });
+  h+='<tr><td><b>FS real (vs q<sub>serv,neta</sub>)</b></td>'+keys.map(k=>{ const f=qn<=0?Infinity:c.th[k].quNet/qn; return `<td class="num ${k===p.method?'selc':''}"><b>${fsTxt(f)}</b></td>`; }).join('')+'</tr></table>';
+  return h;
+}
+
+function theoryReading(c){
+  const keys=Object.keys(METHODS), vals=keys.map(k=>c.th[k].qadmNet);
+  const mn=Math.min(...vals), mx=Math.max(...vals), kmn=keys[vals.indexOf(mn)], kmx=keys[vals.indexOf(mx)];
+  const qn=c.tank.qn;
+  return `<p>q<sub>adm</sub> neta varía entre <b>${kpa(mn)}</b> (${METHODS[kmn].name}) y <b>${kpa(mx)}</b> (${METHODS[kmx].name}); el cociente máx/mín es <b>${fmt(mx/mn,2)}</b>.</p>
+  <p>La demanda neta es <b>${kpa(qn)}</b>. ${qn<=0?'Es menor o igual que cero: no hay incremento neto de presión.':`Con la teoría más conservadora (${METHODS[kmn].name}) la demanda ocupa ${fmt(qn/mn*100,1)} % de la q<sub>adm</sub> neta.`}</p>
+  <p class="small">La dispersión entre teorías es normal: refleja distintas hipótesis de superficie de falla y de factores empíricos. Se recomienda reportar la teoría usada y el rango.</p>`;
+}
+
+function eqMethodHtml(m){
+  const E=s=>`<div class="eq">${s}</div>`;
+  let h='';
+  const gen='q<sub>u</sub> = c′N<sub>c</sub>F<sub>cs</sub>F<sub>cd</sub> + qN<sub>q</sub>F<sub>qs</sub>F<sub>qd</sub> + ½γB N<sub>γ</sub>F<sub>γs</sub>F<sub>γd</sub>';
+  h+=E(gen)+E('q = γD<sub>f</sub> &nbsp;&nbsp; | &nbsp;&nbsp; q<sub>adm,neta</sub> = (q<sub>u</sub> − q)/FS');
+  if(m.key==='terzaghi'){
+    h+=E('N<sub>q</sub> = a² / [2cos²(45° + φ/2)], &nbsp; a = e<sup>(0.75π − φ/2)tanφ</sup> &nbsp;|&nbsp; N<sub>c</sub> = (N<sub>q</sub> − 1)cotφ')
+     +E('N<sub>γ</sub> = ½tanφ (K<sub>pγ</sub>/cos²φ − 1), &nbsp; K<sub>pγ</sub> ≈ 3tan²[45° + (φ + 33°)/2]')
+     +'<details open><summary>Factores implementados</summary><p class="small">Forma (interpolación faja–cuadrada): F<sub>cs</sub> = 1 + 0.3(B/L); F<sub>γs</sub> = 1 − 0.2(B/L); F<sub>qs</sub> = 1. Profundidad: F<sub>cd</sub> = F<sub>qd</sub> = F<sub>γd</sub> = 1. Para φ = 0°: N<sub>c</sub> = 5.70, N<sub>q</sub> = 1, N<sub>γ</sub> = 0.</p></details>';
+  }else if(m.key==='meyerhof'){
+    h+=E('N<sub>q</sub> = e<sup>π tanφ</sup> tan²(45° + φ/2) &nbsp;|&nbsp; N<sub>c</sub> = (N<sub>q</sub> − 1)cotφ &nbsp;|&nbsp; N<sub>γ</sub> = (N<sub>q</sub> − 1)tan(1.4φ)')
+     +'<details open><summary>Factores implementados</summary><p class="small">K<sub>p</sub> = tan²(45° + φ/2). Forma: F<sub>cs</sub> = 1 + 0.2K<sub>p</sub>(B/L); F<sub>qs</sub> = F<sub>γs</sub> = 1 + 0.1K<sub>p</sub>(B/L) si φ &gt; 10°, si no 1.</p><p class="small">Profundidad: F<sub>cd</sub> = 1 + 0.2√K<sub>p</sub>(D<sub>f</sub>/B); F<sub>qd</sub> = F<sub>γd</sub> = 1 + 0.1√K<sub>p</sub>(D<sub>f</sub>/B) si φ &gt; 10°, si no 1. Para φ = 0°: N<sub>c</sub> = 5.14, N<sub>q</sub> = 1, N<sub>γ</sub> = 0.</p></details>';
+  }else{
+    const ng = m.key==='hansen' ? 'N<sub>γ</sub> = 1.5(N<sub>q</sub> − 1)tanφ' : 'N<sub>γ</sub> = 2(N<sub>q</sub> + 1)tanφ';
+    const fq = m.key==='hansen' ? 'F<sub>qs</sub> = 1 + (B/L)sinφ' : 'F<sub>qs</sub> = 1 + (B/L)tanφ';
+    h+=E('N<sub>q</sub> = e<sup>π tanφ</sup> tan²(45° + φ/2) &nbsp;|&nbsp; N<sub>c</sub> = (N<sub>q</sub> − 1)cotφ &nbsp;|&nbsp; '+ng)
+     +`<details open><summary>Factores implementados</summary><p class="small">Forma: F<sub>cs</sub> = 1 + (B/L)(N<sub>q</sub>/N<sub>c</sub>); ${fq}; F<sub>γs</sub> = 1 − 0.4(B/L).</p>
+       <p class="small">Profundidad (φ &gt; 0): k = D<sub>f</sub>/B si D<sub>f</sub>/B ≤ 1, k = atan(D<sub>f</sub>/B) si D<sub>f</sub>/B &gt; 1; F<sub>qd</sub> = 1 + 2tanφ(1 − sinφ)² k; F<sub>cd</sub> = F<sub>qd</sub> − (1 − F<sub>qd</sub>)/(N<sub>c</sub>tanφ); F<sub>γd</sub> = 1.</p>
+       <p class="small">Para φ = 0°: N<sub>c</sub> = 5.14, N<sub>q</sub> = 1, N<sub>γ</sub> = 0, F<sub>cs</sub> = 1 + 0.2(B/L), F<sub>cd</sub> = 1 + 0.4k.</p></details>`;
+  }
+  return h;
+}
+
+function components(m){
+  const arr=[['c′·Nc·Fcs·Fcd',m.tC],['q·Nq·Fqs·Fqd',m.tQ],['½γB·Nγ·Fγs·Fγd',m.tG]];
+  const max=Math.max(m.qu,1), W=920,H=190, x0=190, full=660;
+  let y=40, rows='';
+  arr.forEach((a,i)=>{
+    const w=Math.max(0,full*a[1]/max), fill=['#8bb8bd','#0b6e75','#c98724'][i];
+    rows+=`<text x="10" y="${y+18}" font-size="14" fill="#18323a">${a[0]}</text><rect x="${x0}" y="${y}" width="${w}" height="24" rx="6" fill="${fill}"/><text x="${x0+w+8}" y="${y+18}" font-size="14" fill="#18323a">${fmt(a[1],1)} kPa</text>`;
+    y+=45;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Aporte de cada término a la capacidad última"><text x="10" y="24" font-size="13" fill="#61757c">Aporte de cada término a qᵤ (${m.name})</text>${rows}</svg>`;
+}
+
+function compareChart(p,c){
+  const items=Object.keys(METHODS).map(k=>({lab:METHODS[k].name+(k===p.method?' (sel.)':''),v:c.th[k].qadmNet,col:k===p.method?'#0b6e75':'#8bb8bd'}));
+  if(c.spt.ok) items.push({lab:'SPT (sin convertir a neta)',v:c.spt.qadm,col:'#6c7fa6'});
+  const qn=c.tank.qn;
+  const max=Math.max(...items.map(i=>i.v),qn,1)*1.15, W=900, x0=250, full=560, rh=44, top=48, H=top+items.length*rh+36;
+  let g='';
+  items.forEach((it,i)=>{
+    const y=top+i*rh, w=Math.max(0,full*it.v/max);
+    g+=`<text x="${x0-10}" y="${y+21}" text-anchor="end" font-size="14" fill="#18323a">${it.lab}</text><rect x="${x0}" y="${y+4}" width="${w}" height="26" rx="6" fill="${it.col}"/><text x="${x0+w+8}" y="${y+23}" font-size="14" font-weight="700" fill="#18323a">${fmt(it.v,1)}</text>`;
+  });
+  const xl=x0+full*Math.max(qn,0)/max;
+  g+=`<line x1="${xl}" y1="${top-10}" x2="${xl}" y2="${top+items.length*rh}" stroke="#c98724" stroke-width="3" stroke-dasharray="7 5"/><text x="${xl+6}" y="${top-14}" font-size="13" font-weight="700" fill="#8a5f15">q_serv,neta = ${fmt(qn,1)} kPa</text>`;
+  g+=`<line x1="${x0}" y1="${top-6}" x2="${x0}" y2="${top+items.length*rh}" stroke="#9aabb0" stroke-width="2"/><text x="${x0}" y="${H-10}" font-size="12" fill="#61757c">kPa</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Comparación de capacidad admisible por teoría y demanda neta">${g}</svg>`;
+}
+
+/* ====================== procedimiento ====================== */
+function stepsHtml(p,c){
+  const m=c.sel, t=c.tank, k=c.chk, s=c.spt, K=m.key;
+  const EQ=(sym,sub)=>`<div class="eq">${sym}</div><div class="eq sub">${sub}</div>`;
+  const ph=fmt(p.phi,2)+'°', f3=x=>fmt(x,3), f1=x=>fmt(x,1);
+  const flat=p.phi<0.001;
+  const det=(n,title,body,open=true)=>`<details ${open?'open':''}><summary>${n}. ${title}</summary>${body}</details>`;
+  let out='';
+
+  out+=det(1,'Identificar datos e incógnitas',`<p>Cimentación B = ${fmt(m.Bm,2)} m (menor lado), L = ${fmt(m.Lm,2)} m, D<sub>f</sub> = ${fmt(p.Df,2)} m; suelo γ = ${fmt(p.gamma,2)} kN/m³, c′ = ${fmt(p.cohesion,1)} kPa, φ′ = ${ph}; FS = ${fmt(p.FS,2)}. Tanque B<sub>t</sub> × L<sub>t</sub> = ${fmt(p.Bt,2)} × ${fmt(p.Lt,2)} m, h = ${fmt(t.hw,2)} m. Teoría: <b>${m.name}</b>.</p><p class="small">Incógnitas: q<sub>u</sub>, q<sub>adm,neta</sub>, q<sub>serv,neta</sub> y FS real.</p>`);
+
+  // 2. Factores de capacidad
+  let n='';
+  if(K==='terzaghi'){
+    n+=EQ('a = e<sup>(0.75π − φ/2)tanφ</sup>',`a = e<sup>(0.75π − ${fmt(p.phi/2,2)}°·π/180)·tan(${ph})</sup> = ${f3(m.a)}`);
+    n+=EQ('N<sub>q</sub> = a² / [2cos²(45° + φ/2)]',`N<sub>q</sub> = ${f3(m.a)}² / [2cos²(${fmt(45+p.phi/2,2)}°)] = ${f3(m.Nq)}`);
+    n+=EQ('N<sub>c</sub> = (N<sub>q</sub> − 1)cotφ',flat?`N<sub>c</sub> = 5.70 (φ = 0°)`:`N<sub>c</sub> = (${f3(m.Nq)} − 1)/tan(${ph}) = ${f3(m.Nc)}`);
+    n+=EQ('N<sub>γ</sub> = ½tanφ (K<sub>pγ</sub>/cos²φ − 1), K<sub>pγ</sub> ≈ 3tan²[45° + (φ+33°)/2]',`K<sub>pγ</sub> = 3tan²(${fmt(45+(p.phi+33)/2,2)}°) = ${f3(m.Kpg)}; N<sub>γ</sub> = ½·tan(${ph})·(${f3(m.Kpg)}/cos²(${ph}) − 1) = ${f3(m.Ng)}`);
+  }else{
+    n+=EQ('N<sub>q</sub> = e<sup>π tanφ</sup> tan²(45° + φ/2)',flat?'N<sub>q</sub> = 1 (φ = 0°)':`N<sub>q</sub> = e<sup>π·tan(${ph})</sup> · tan²(${fmt(45+p.phi/2,2)}°) = ${f3(m.Nq)}`);
+    n+=EQ('N<sub>c</sub> = (N<sub>q</sub> − 1)cotφ',flat?'N<sub>c</sub> = 5.14 (φ = 0°)':`N<sub>c</sub> = (${f3(m.Nq)} − 1)/tan(${ph}) = ${f3(m.Nc)}`);
+    if(K==='vesic') n+=EQ('N<sub>γ</sub> = 2(N<sub>q</sub> + 1)tanφ',`N<sub>γ</sub> = 2(${f3(m.Nq)} + 1)·tan(${ph}) = ${f3(m.Ng)}`);
+    if(K==='hansen') n+=EQ('N<sub>γ</sub> = 1.5(N<sub>q</sub> − 1)tanφ',`N<sub>γ</sub> = 1.5(${f3(m.Nq)} − 1)·tan(${ph}) = ${f3(m.Ng)}`);
+    if(K==='meyerhof') n+=EQ('N<sub>γ</sub> = (N<sub>q</sub> − 1)tan(1.4φ)',`N<sub>γ</sub> = (${f3(m.Nq)} − 1)·tan(${fmt(1.4*p.phi,2)}°) = ${f3(m.Ng)}`);
+  }
+  out+=det(2,'Calcular los factores de capacidad',n);
+
+  // 3. Forma
+  let sh='';
+  const r=m.r, rr=fmt(r,3);
+  if(K==='terzaghi'){
+    sh+=EQ('F<sub>cs</sub> = 1 + 0.3(B/L)',`F<sub>cs</sub> = 1 + 0.3·${rr} = ${f3(m.sc)}`)+EQ('F<sub>qs</sub> = 1',`F<sub>qs</sub> = ${f3(m.sq)}`)+EQ('F<sub>γs</sub> = 1 − 0.2(B/L)',`F<sub>γs</sub> = 1 − 0.2·${rr} = ${f3(m.sg)}`);
+  }else if(K==='meyerhof'){
+    sh+=EQ('K<sub>p</sub> = tan²(45° + φ/2)',`K<sub>p</sub> = tan²(${fmt(45+p.phi/2,2)}°) = ${f3(m.Kp)}`)
+      +EQ('F<sub>cs</sub> = 1 + 0.2K<sub>p</sub>(B/L)',`F<sub>cs</sub> = 1 + 0.2·${f3(m.Kp)}·${rr} = ${f3(m.sc)}`)
+      +EQ('F<sub>qs</sub> = F<sub>γs</sub> = 1 + 0.1K<sub>p</sub>(B/L)  (φ &gt; 10°)',p.phi>10?`F<sub>qs</sub> = F<sub>γs</sub> = 1 + 0.1·${f3(m.Kp)}·${rr} = ${f3(m.sq)}`:`φ ≤ 10° → F<sub>qs</sub> = F<sub>γs</sub> = ${f3(m.sq)}`);
+  }else{
+    sh+=EQ('F<sub>cs</sub> = 1 + (B/L)(N<sub>q</sub>/N<sub>c</sub>)',flat?`φ = 0° → F<sub>cs</sub> = 1 + 0.2·${rr} = ${f3(m.sc)}`:`F<sub>cs</sub> = 1 + ${rr}·(${f3(m.Nq)}/${f3(m.Nc)}) = ${f3(m.sc)}`);
+    sh+= K==='hansen' ? EQ('F<sub>qs</sub> = 1 + (B/L)sinφ',`F<sub>qs</sub> = 1 + ${rr}·sin(${ph}) = ${f3(m.sq)}`) : EQ('F<sub>qs</sub> = 1 + (B/L)tanφ',`F<sub>qs</sub> = 1 + ${rr}·tan(${ph}) = ${f3(m.sq)}`);
+    sh+=EQ('F<sub>γs</sub> = 1 − 0.4(B/L)',`F<sub>γs</sub> = 1 − 0.4·${rr} = ${f3(m.sg)}`);
+  }
+  out+=det(3,'Calcular los factores de forma',sh);
+
+  // 4. Profundidad
+  let dp='';
+  if(K==='terzaghi'){
+    dp+=`<p>Terzaghi no incluye factores de profundidad: F<sub>cd</sub> = F<sub>qd</sub> = F<sub>γd</sub> = 1. La resistencia sobre el nivel de apoyo se reemplaza por la sobrecarga q.</p>`;
+  }else if(K==='meyerhof'){
+    dp+=EQ('F<sub>cd</sub> = 1 + 0.2√K<sub>p</sub>(D<sub>f</sub>/B)',`F<sub>cd</sub> = 1 + 0.2·√${f3(m.Kp)}·${fmt(m.kD,3)} = ${f3(m.dc)}`)
+      +EQ('F<sub>qd</sub> = F<sub>γd</sub> = 1 + 0.1√K<sub>p</sub>(D<sub>f</sub>/B)  (φ &gt; 10°)',p.phi>10?`F<sub>qd</sub> = F<sub>γd</sub> = 1 + 0.1·√${f3(m.Kp)}·${fmt(m.kD,3)} = ${f3(m.dq)}`:`φ ≤ 10° → F<sub>qd</sub> = F<sub>γd</sub> = ${f3(m.dq)}`);
+  }else{
+    dp+=EQ('k = D<sub>f</sub>/B  (D<sub>f</sub>/B ≤ 1);  k = atan(D<sub>f</sub>/B)  (D<sub>f</sub>/B &gt; 1)',`D<sub>f</sub>/B = ${fmt(p.Df,2)}/${fmt(m.Bm,2)} = ${fmt(m.kD,3)} → k = ${fmt(m.k,4)}`);
+    dp+=EQ('F<sub>qd</sub> = 1 + 2tanφ(1 − sinφ)² k',flat?`φ = 0° → F<sub>qd</sub> = 1`:`F<sub>qd</sub> = 1 + 2·tan(${ph})·(1 − sin(${ph}))²·${fmt(m.k,4)} = ${f3(m.dq)}`);
+    dp+=EQ('F<sub>cd</sub> = F<sub>qd</sub> − (1 − F<sub>qd</sub>)/(N<sub>c</sub>tanφ)',flat?`φ = 0° → F<sub>cd</sub> = 1 + 0.4·${fmt(m.k,4)} = ${f3(m.dc)}`:`F<sub>cd</sub> = ${f3(m.dq)} − (1 − ${f3(m.dq)})/(${f3(m.Nc)}·tan(${ph})) = ${f3(m.dc)}`);
+    dp+=EQ('F<sub>γd</sub> = 1',`F<sub>γd</sub> = ${f3(m.dg)}`);
+  }
+  out+=det(4,'Calcular los factores de profundidad',dp);
+
+  // 5. Capacidad última
+  out+=det(5,'Capacidad última',
+    EQ('q = γD<sub>f</sub>',`q = ${fmt(p.gamma,2)} × ${fmt(p.Df,2)} = ${f1(m.q)} kPa`)
+   +EQ('q<sub>u</sub> = c′N<sub>c</sub>F<sub>cs</sub>F<sub>cd</sub> + qN<sub>q</sub>F<sub>qs</sub>F<sub>qd</sub> + ½γB N<sub>γ</sub>F<sub>γs</sub>F<sub>γd</sub>',
+      `q<sub>u</sub> = ${fmt(p.cohesion,1)}·${f3(m.Nc)}·${f3(m.sc)}·${f3(m.dc)} + ${f1(m.q)}·${f3(m.Nq)}·${f3(m.sq)}·${f3(m.dq)} + ½·${fmt(p.gamma,2)}·${fmt(m.Bm,2)}·${f3(m.Ng)}·${f3(m.sg)}·${f3(m.dg)}<br>q<sub>u</sub> = ${f1(m.tC)} + ${f1(m.tQ)} + ${f1(m.tG)} = <b>${f1(m.qu)} kPa</b>`));
+
+  // 6. Admisible neta
+  out+=det(6,'Capacidad admisible neta',
+    EQ('q<sub>u,neta</sub> = q<sub>u</sub> − q',`q<sub>u,neta</sub> = ${f1(m.qu)} − ${f1(m.q)} = ${f1(m.quNet)} kPa`)
+   +EQ('q<sub>adm,neta</sub> = q<sub>u,neta</sub> / FS',`q<sub>adm,neta</sub> = ${f1(m.quNet)} / ${fmt(p.FS,2)} = <b>${f1(m.qadmNet)} kPa</b>`)
+   +`<p class="small">Referencias (no usadas en el chequeo): q<sub>adm</sub> bruta = q<sub>u</sub>/FS = ${f1(m.qadmGross)} kPa; q + q<sub>adm,neta</sub> = ${f1(m.qadmNetGross)} kPa.</p>`);
+
+  // 7. Demanda
+  out+=det(7,'Demanda del tanque',
+    EQ('V<sub>w</sub> = B<sub>t</sub>L<sub>t</sub>h',`V<sub>w</sub> = ${fmt(p.Bt,2)} × ${fmt(p.Lt,2)} × ${fmt(t.hw,2)} = ${fmt(t.Vw,2)} m³`)
+   +EQ('W<sub>w</sub> = γ<sub>w</sub>V<sub>w</sub>',`W<sub>w</sub> = ${fmt(p.gw,2)} × ${fmt(t.Vw,2)} = ${f1(t.Ww)} kN`)
+   +EQ('W<sub>losa</sub> = B L t<sub>f</sub> γ<sub>c</sub>',p.incF?`W<sub>losa</sub> = ${fmt(p.B,2)}·${fmt(p.L,2)}·${fmt(p.tf,2)}·${fmt(p.gc,1)} = ${f1(t.Wf)} kN`:'No incluido (casilla desmarcada): W<sub>losa</sub> = 0 kN')
+   +EQ('q<sub>serv</sub> = (W<sub>w</sub> + W<sub>estr</sub> + W<sub>losa</sub>)/(BL)',`q<sub>serv</sub> = (${f1(t.Ww)} + ${f1(t.Wstruct)} + ${f1(t.Wf)}) / (${fmt(p.B,2)}·${fmt(p.L,2)}) = ${f1(t.qs)} kPa`)
+   +EQ('q<sub>serv,neta</sub> = q<sub>serv</sub> − γD<sub>f</sub>',`q<sub>serv,neta</sub> = ${f1(t.qs)} − ${f1(t.q)} = <b>${f1(t.qn)} kPa</b>`));
+
+  // 8. Verificación
+  out+=det(8,'Verificar e interpretar',
+    EQ('FS real = q<sub>u,neta</sub> / q<sub>serv,neta</sub>',k.compensada?'q<sub>serv,neta</sub> ≤ 0 → no hay incremento neto de presión; FS real → ∞':`FS real = ${f1(m.quNet)} / ${f1(k.qn)} = <b>${fmt(k.FSreal,2)}</b>`)
+   +EQ('q<sub>serv,neta</sub> ≤ q<sub>adm,neta</sub>',`${f1(k.qn)} kPa ${k.qn<=m.qadmNet?'≤':'>'} ${f1(m.qadmNet)} kPa → utilización ${k.compensada?'0.0':fmt(k.eta*100,1)} %`)
+   +`<p><span class="status ${k.status}">${{good:'Cumple por capacidad portante (corte)',warn:'No alcanza el FS requerido',bad:'Falla por corte'}[k.status]}</span></p><p class="small">Debe completarse el diseño con asentamientos, estabilidad global, sismo y diseño estructural de la losa.</p>`);
+
+  // 9. SPT
+  out+=det(9,'Ruta SPT (contraste empírico)',s.ok
+    ? EQ('N<sub>60</sub> = C<sub>E</sub>C<sub>B</sub>C<sub>R</sub>C<sub>S</sub>N',`N<sub>60</sub> = ${fmt(p.CE,2)}·${fmt(p.CB,2)}·${fmt(p.CR,2)}·${fmt(p.CS,2)}·${fmt(s.N,0)} = ${fmt(s.N60,2)}`)
+      +EQ('(N<sub>1</sub>)<sub>60</sub> = C<sub>N</sub>N<sub>60</sub>',`(N<sub>1</sub>)<sub>60</sub> = ${fmt(p.CN,2)}·${fmt(s.N60,2)} = ${fmt(s.N160,2)}`)
+      +EQ('q<sub>u,SPT</sub> = 32(N<sub>1</sub>)<sub>60</sub>B[C<sub>w1</sub> + C<sub>w2</sub>(D<sub>f</sub>/B)]',`q<sub>u,SPT</sub> = 32·${fmt(s.N160,2)}·${fmt(m.Bm,2)}·[${fmt(p.Cw1,2)} + ${fmt(p.Cw2,2)}·(${fmt(p.Df,2)}/${fmt(m.Bm,2)})] = ${f1(s.qu)} kPa`)
+      +EQ('q<sub>adm,SPT</sub> = q<sub>u,SPT</sub> / FS',`q<sub>adm,SPT</sub> = ${f1(s.qu)} / ${fmt(s.FS,2)} = <b>${f1(s.qadm)} kPa</b>`)
+    : `<p>No se ejecutó SPT en Tocaña. Introduzca un N de campo únicamente para un análisis paramétrico y comparativo.</p>`, s.ok);
+
+  // 10. Teorías
+  const kk=Object.keys(METHODS);
+  out+=det(10,'Contraste entre teorías',`<p>q<sub>adm,neta</sub>: ${kk.map(x=>`${METHODS[x].name} = <b>${f1(c.th[x].qadmNet)} kPa</b>`).join(' · ')}.</p><p class="small">Detalle de factores en la pestaña «3. Teorías».</p>`, false);
+  return out;
+}
+function toggleSteps(open){ document.querySelectorAll('#steps details').forEach(d=>d.open=open); }
+
+/* ====================== resultados, resumen, exportación ====================== */
+function renderResults(p,c){
+  const m=c.sel, t=c.tank, k=c.chk, s=c.spt;
+  $('resTheory').textContent=m.name+' · '+METHODS[m.key].desc;
+  const R=(a,b,u='')=>`<tr><td>${a}</td><td class="num">${b}</td><td>${u}</td></tr>`;
+  $('resTable').innerHTML=`<table><tr><th>Magnitud</th><th class="num">Valor</th><th>Unidad</th></tr>
+   ${R('B × L (cimentación)',fmt(p.B,2)+' × '+fmt(p.L,2),'m')}${R('D<sub>f</sub>',fmt(p.Df,2),'m')}${R('q = γD<sub>f</sub>',fmt(m.q,1),'kPa')}
+   ${R('N<sub>q</sub> / N<sub>c</sub> / N<sub>γ</sub>',[m.Nq,m.Nc,m.Ng].map(x=>fmt(x,2)).join(' / '),'—')}
+   ${R('qᵤ bruta',fmt(m.qu,1),'kPa')}${R('qᵤ neta',fmt(m.quNet,1),'kPa')}${R('<b>q<sub>adm</sub> neta</b>',fmt(m.qadmNet,1),'kPa')}
+   ${R('Peso total W',fmt(t.Wtot,1),'kN')}${R('q<sub>serv</sub> (total)',fmt(t.qs,1),'kPa')}${R('<b>q<sub>serv,neta</sub></b>',fmt(t.qn,1),'kPa')}
+   ${R('<b>FS real</b>',fsTxt(k.FSreal),'—')}${R('FS requerido',fmt(k.FSreq,2),'—')}${R('Utilización',k.compensada?'0.0':fmt(k.eta*100,1),'%')}
+   ${s.ok?R('q<sub>adm</sub> por SPT (referencia)',fmt(s.qadm,1),'kPa'):R('q<sub>adm</sub> por SPT','Sin dato','—')}</table>`;
+}
+
+function renderSummary(p,c){
+  const m=c.sel, t=c.tank, k=c.chk;
+  const T=(l,v,cls='')=>`<div class="sum ${cls}"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+  $('sumbar').innerHTML=
+    T('B × L',fmt(p.B,2)+' × '+fmt(p.L,2)+' m')+T('Df',fmt(p.Df,2)+' m')+T('q = γDf',fmt(m.q,1)+' kPa')+
+    T('qᵤ ('+m.name.split(' ')[0]+')',fmt(m.qu,0)+' kPa')+T('qadm neta',fmt(m.qadmNet,1)+' kPa')+
+    T('q_serv neta',fmt(t.qn,1)+' kPa')+T('FS real',fsTxt(k.FSreal),k.status)+
+    T('Estado',{good:'Cumple',warn:'No alcanza FS',bad:'Falla'}[k.status],k.status);
+}
+
+function exportTxt(){
+  if(!LAST){ alert('Corrija los datos marcados antes de exportar.'); return; }
+  const {p,c,v}=LAST, m=c.sel, t=c.tank, k=c.chk, s=c.spt;
+  const out=[]; const L=(x='')=>out.push(x);
+  const row=(a,b,u='')=>L(a.padEnd(46)+String(b).padStart(14)+(u?'  '+u:''));
+  L('GEOTOCAÑA · CAPACIDAD PORTANTE · V02');
+  L('Fecha de cálculo: '+new Date().toLocaleString('es-BO'));
+  L('='.repeat(70)); L('DATOS'); L('-'.repeat(70));
+  row('Ancho tanque Bt',fmt(p.Bt,2),'m'); row('Largo tanque Lt',fmt(p.Lt,2),'m'); row('Altura total Ht',fmt(p.Ht,2),'m'); row('Altura de agua h',fmt(t.hw,2),'m');
+  row('Peso unitario del agua',fmt(p.gw,2),'kN/m3'); row('Peso adicional estructura',fmt(p.Wstruct,1),'kN');
+  row('Cimentación B',fmt(p.B,2),'m'); row('Cimentación L',fmt(p.L,2),'m'); row('Profundidad Df',fmt(p.Df,2),'m');
+  row('Peso unitario del suelo',fmt(p.gamma,2),'kN/m3'); row('Cohesión c\'',fmt(p.cohesion,1),'kPa'); row('Ángulo de fricción',fmt(p.phi,2),'°');
+  row('Factor de seguridad FS',fmt(p.FS,2)); row('Espesor de losa',fmt(p.tf,2),'m'); row('Peso unitario del concreto',fmt(p.gc,1),'kN/m3');
+  row('Peso de la losa en la demanda',p.incF?'Sí':'No');
+  L(); L('TEORÍA USADA: '+m.name+' — '+METHODS[m.key].desc);
+  L('Hipótesis: carga vertical centrada, base y terreno horizontales, sin nivel freático.');
+  L('Convención: presión neta (q_serv - gamma*Df) contra q_adm neta.');
+  L(); L('FACTORES'); L('-'.repeat(70));
+  [['Nq','Nq'],['Nc','Nc'],['Ngamma','Ng'],['Fcs','sc'],['Fqs','sq'],['Fgs','sg'],['Fcd','dc'],['Fqd','dq'],['Fgd','dg']].forEach(([a,b])=>row(a,fmt(m[b],3)));
+  L(); L('CAPACIDAD PORTANTE'); L('-'.repeat(70));
+  row('Sobrecarga q = gamma*Df',fmt(m.q,1),'kPa'); row('Término cohesión',fmt(m.tC,1),'kPa'); row('Término sobrecarga',fmt(m.tQ,1),'kPa'); row('Término peso propio',fmt(m.tG,1),'kPa');
+  row('qu bruta',fmt(m.qu,1),'kPa'); row('qu neta = qu - q',fmt(m.quNet,1),'kPa'); row('q_adm neta = qu_neta/FS',fmt(m.qadmNet,1),'kPa');
+  row('(ref.) q_adm bruta = qu/FS',fmt(m.qadmGross,1),'kPa');
+  L(); L('DEMANDA DEL TANQUE'); L('-'.repeat(70));
+  row('Volumen de agua',fmt(t.Vw,2),'m3'); row('Peso del agua',fmt(t.Ww,1),'kN'); row('Peso de la losa',fmt(t.Wf,1),'kN'); row('Peso total W',fmt(t.Wtot,1),'kN');
+  row('q_serv (total)',fmt(t.qs,1),'kPa'); row('q_serv neta',fmt(t.qn,1),'kPa');
+  L(); L('VERIFICACIÓN'); L('-'.repeat(70));
+  row('FS real = qu_neta/q_serv_neta',fsTxt(k.FSreal)); row('FS requerido',fmt(k.FSreq,2)); row('Utilización',k.compensada?'0.0':fmt(k.eta*100,1),'%');
+  L('Estado: '+{good:'CUMPLE',warn:'NO ALCANZA EL FS REQUERIDO',bad:'FALLA POR CORTE'}[k.status]);
+  L(); L('COMPARACIÓN DE TEORÍAS (q_adm neta, kPa)'); L('-'.repeat(70));
+  Object.keys(METHODS).forEach(x=>row(METHODS[x].name+(x===p.method?'  (usada)':''),fmt(c.th[x].qadmNet,1),'kPa'));
+  L(); L('SPT'); L('-'.repeat(70));
+  if(s.ok){ row('N medido',fmt(s.N,0)); row('N60',fmt(s.N60,2)); row('(N1)60',fmt(s.N160,2)); row('qu SPT',fmt(s.qu,1),'kPa'); row('q_adm SPT (sin convertir a neta)',fmt(s.qadm,1),'kPa'); }
+  else L('No realizado en Tocaña.');
+  if(v.warns.length){ L(); L('ADVERTENCIAS'); L('-'.repeat(70)); v.warns.forEach(x=>L('* '+x)); }
+  L(); L('Nota: verificación solo por capacidad portante al corte. Faltan asentamientos, estabilidad global, sismo y diseño estructural.');
+  const blob=new Blob(['\ufeff'+out.join('\r\n')],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Capacidad_Portante_Tocana_V02.txt';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+
+/* ====================== esquema SVG acotado ====================== */
+function svgScheme(p,c){
+  const W=800,H=500, t=c.tank, m=c.sel;
+  const Bf=p.B, Bt=p.Bt, tfd=Math.min(p.tf,p.Df);
+  const zSt=p.Df-tfd, zTt=zSt-p.Ht, zTop=Math.min(zTt,0);       // z positivo hacia abajo desde el terreno
+  const spanZ=Math.max(p.Df-zTop,0.1);
+  const topM=70, botM=104, sideL=135, sideR=150;
+  const sV=(H-topM-botM)/spanZ, sH=(W-sideL-sideR)/Math.max(Bf,Bt);
+  const s=Math.min(sV,sH), cx=sideL+(W-sideL-sideR)/2;           // escala dinámica (px/m)
+  const Y=z=>topM+(z-zTop)*s;
+  const xF1=cx-Bf*s/2, xF2=cx+Bf*s/2, xT1=cx-Bt*s/2, xT2=cx+Bt*s/2;
+  const yG=Y(0), yB=Y(p.Df), ySt=Y(zSt), yTt=Y(zTt), hwPx=t.hw*s, yWs=ySt-hwPx;
+  const xL=Math.min(xF1,xT1), xR=Math.max(xF2,xT2);
+  const K='#18323a', O='#c98724';
+  // texto con halo blanco (dos capas) para leerse sobre el achurado
+  const tx=(x,y,txt,fill,attrs)=>`<text x="${x}" y="${y}" ${attrs} fill="#fff" stroke="#fff" stroke-width="4" stroke-linejoin="round">${txt}</text><text x="${x}" y="${y}" ${attrs} fill="${fill}">${txt}</text>`;
+  const mk=col=>col===O?'arrO':'arrK';
+  const dimH=(x1,x2,y,lab,yObj,col=K)=>`<line x1="${x1}" y1="${yObj}" x2="${x1}" y2="${y+4}" stroke="#7b8e94" stroke-width="1" stroke-dasharray="3 3"/><line x1="${x2}" y1="${yObj}" x2="${x2}" y2="${y+4}" stroke="#7b8e94" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="1.6" marker-start="url(#${mk(col)})" marker-end="url(#${mk(col)})"/>
+    ${tx((x1+x2)/2,y-6,lab,col,'text-anchor="middle" font-size="12.5" font-weight="700"')}`;
+  const dimV=(y1,y2,x,lab,xo1,xo2,side,col=K)=>`<line x1="${xo1}" y1="${y1}" x2="${x+(side>0?-4:4)}" y2="${y1}" stroke="#7b8e94" stroke-width="1" stroke-dasharray="3 3"/><line x1="${xo2}" y1="${y2}" x2="${x+(side>0?-4:4)}" y2="${y2}" stroke="#7b8e94" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${col}" stroke-width="1.6" marker-start="url(#${mk(col)})" marker-end="url(#${mk(col)})"/>
+    ${tx(x+side*8,(y1+y2)/2+4,lab,col,`text-anchor="${side>0?'start':'end'}" font-size="12.5" font-weight="700"`)}`;
+  const nArr=Math.max(3,Math.min(9,Math.round((xF2-xF1)/60)));
+  let arrows=''; for(let i=0;i<nArr;i++){ const x=xF1+(i+.5)*(xF2-xF1)/nArr; arrows+=`<line x1="${x}" y1="${yB+3}" x2="${x}" y2="${yB+27}" stroke="#a83a3a" stroke-width="2" marker-end="url(#arrR)"/>`; }
+  const showW = hwPx>26;
+  const yDimB = yB+66;
+  const svg=`
+  <defs>
+    <pattern id="soilP" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="#f0e3c9"/><circle cx="5" cy="6" r="1.5" fill="#b99c6b"/><circle cx="15" cy="13" r="2" fill="#c7ad7d"/></pattern>
+    <pattern id="concP" width="18" height="18" patternUnits="userSpaceOnUse"><rect width="18" height="18" fill="#d9e1e3"/><circle cx="5" cy="5" r="1.4" fill="#a7b4b8"/><circle cx="13" cy="11" r="1.2" fill="#a7b4b8"/></pattern>
+    <marker id="arrK" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${K}"/></marker>
+    <marker id="arrO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${O}"/></marker>
+    <marker id="arrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#a83a3a"/></marker>
+    <marker id="fOrg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="${O}"/></marker>
+  </defs>
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+  <rect x="0" y="${yG}" width="${W}" height="${H-yG}" fill="url(#soilP)"/>
+  <line x1="0" y1="${yG}" x2="${W}" y2="${yG}" stroke="${K}" stroke-width="2.5"/>
+  ${tx(8,yG-7,'Terreno (z = 0)','#6f5d3f','font-size="12"')}
+  <rect x="${xT1}" y="${yTt}" width="${xT2-xT1}" height="${Math.max(ySt-yTt,1)}" fill="#eef4f5" stroke="${K}" stroke-width="4"/>
+  ${hwPx>0.5?`<rect x="${xT1+3}" y="${yWs}" width="${xT2-xT1-6}" height="${Math.max(hwPx-2,0)}" fill="#a8d9e4" opacity=".9"/><line x1="${xT1+3}" y1="${yWs}" x2="${xT2-3}" y2="${yWs}" stroke="#0b6e75" stroke-width="2.5"/>`:''}
+  <rect x="${xF1}" y="${ySt}" width="${xF2-xF1}" height="${Math.max(yB-ySt,2)}" fill="url(#concP)" stroke="${K}" stroke-width="3"/>
+  <text x="${cx}" y="${yTt+22}" text-anchor="middle" font-size="16" font-weight="800" fill="${K}">Tanque</text>
+  <rect x="${xF1}" y="${yB}" width="${xF2-xF1}" height="30" fill="${O}" opacity=".16" stroke="${O}" stroke-dasharray="5 4"/>
+  ${arrows}
+  ${tx(xR+10,yB+16,'q_serv = '+fmt(t.qs,1)+' kPa','#a83a3a','font-size="12"')}
+  ${tx(xR+10,yB+31,'q_neta = '+fmt(t.qn,1)+' kPa','#a83a3a','font-size="12"')}
+  ${showW?`<line x1="${cx}" y1="${yWs+6}" x2="${cx}" y2="${ySt-4}" stroke="${O}" stroke-width="3.5" marker-end="url(#fOrg)"/>${tx(cx+10,(yWs+ySt)/2+4,'W = '+fmt(t.Wtot,0)+' kN','#8a5f15','font-size="13" font-weight="700"')}`:''}
+  ${dimH(xT1,xT2,yTt-26,'Bₜ = '+fmt(p.Bt,2)+' m',yTt)}
+  ${dimH(xF1,xF2,yDimB,'B = '+fmt(p.B,2)+' m',yB+30)}
+  ${dimV(yG,yB,xL-34,'Df = '+fmt(p.Df,2)+' m',xL,xL,-1,O)}
+  ${dimV(yTt,ySt,xR+34,'Hₜ = '+fmt(p.Ht,2)+' m',xT2,xR,1)}
+  ${tfd>0?dimV(ySt,yB,xR+34,'t = '+fmt(tfd,2)+' m',xR,xF2,1):''}
+  ${hwPx>14?dimV(yWs,ySt,xT1+26,'h = '+fmt(t.hw,2)+' m',xT1+4,xT1+4,1,'#0b6e75'):''}
+  ${tx(10,H-10,'Suelo GC · γ = '+fmt(p.gamma,1)+' kN/m³ · φ′ = '+fmt(p.phi,2)+'° · c′ = '+fmt(p.cohesion,1)+' kPa · '+m.name,'#6f5d3f','font-size="12"')}
+  </g>`;
+  $('tankSvg').innerHTML=svg;
+}
+
+/* ====================== eventos e inicio ====================== */
+function resetTocana(){
+  Object.entries(DEFAULTS).forEach(([k,v])=>$(k).value=v);
+  $('Nspt').value=''; $('method').value='vesic'; $('includeFoundation').checked=true;
+  recalc();
+}
+
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); $(b.dataset.tab).classList.add('active');
+  window.scrollTo({top:0});
+}));
+
+window.addEventListener('beforeprint',()=>toggleSteps(true));
+initForms();
+document.querySelectorAll('input,select').forEach(el=>{ el.addEventListener('input',recalc); el.addEventListener('change',recalc); });
+recalc();
+</script>
+</body>
+</html>
